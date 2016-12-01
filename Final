@@ -1,0 +1,85 @@
+import requests
+from bs4 import BeautifulSoup
+
+import socket
+import threading
+from Queue import Queue
+
+# 1. Choose and GET url (from requests)
+url = 'http://www.yellowpages.com/search?search_terms=coffee'\
+'&geo_location_terms=Los+Angeles%2C+CA'
+r = requests.get(url)
+
+# 2. Make easier to parse/read (so make into a BSoup object)
+soup = BeautifulSoup(r.content)
+
+# Tangent - I have no idea what this is
+# Other than finding all a's, which are link HTMLs, but I don't 
+#remember us using it for anything at all
+r_find = soup.find_all('a')
+
+
+for link in r_find:
+    print "<a href='%s'>%s</a>" %(link.get("href"), link.text)
+    
+# 3. Search for the bits that you want from the page
+# You look on the Inspect Element part of the site, then figure out
+#the tags (z.b. div) and attributes (z.b. class) for what you want 
+    
+g_data = soup.find_all('div', {"class": "info"})
+
+# 4. Start looking for what you want in them
+
+for item in g_data:
+    for i in range(len(item)):
+        print item.contents[i].text
+        
+for item in g_data:
+    print item.contents[0].find_all("a", {"class" : "business-name"})[0].text
+        
+for item in g_data:
+   print item.contents[0].find_all("a", {"class" : "business-name"})[0].text
+    
+for item in g_data:
+    print item.contents[0].find_all("a", {"class" : "business-name"}).text
+    
+
+
+print_lock = threading.Lock()
+
+target = 'pythonprogramming.net'
+
+#can be any function
+def portscan(port):
+    s = socket.socket(socket.AF_INET, socket. SOCK_STREAM)
+    try:
+        con = s.connect((target,port))
+        with print_lock:
+            print('port',port,'is open motherfucker')
+        con.close()
+    except:
+        pass
+        
+        
+def threader():
+    while True:
+        worker=q.get()
+        #can be any function
+        portscan(worker)
+        q.task_done()
+        
+q = Queue()
+
+for i in range(1000):
+    t = threading.Thread(target=threader)
+    #makes it a daemon so it dies when the main thread dies
+    t.daemon = True
+    #no idea what this does
+    t.start()
+    
+#port 0 doesn't exist    
+for worker in range(1,10001):
+    q.put(worker)
+
+#q.join()
+    
